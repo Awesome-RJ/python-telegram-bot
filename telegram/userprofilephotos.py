@@ -48,7 +48,7 @@ class UserProfilePhotos(TelegramObject):
 
     def __init__(self, total_count: int, photos: List[List[PhotoSize]], **_kwargs: Any):
         # Required
-        self.total_count = int(total_count)
+        self.total_count = total_count
         self.photos = photos
 
         self._id_attrs = (self.total_count, self.photos)
@@ -76,4 +76,4 @@ class UserProfilePhotos(TelegramObject):
         return data
 
     def __hash__(self) -> int:
-        return hash(tuple(tuple(p for p in photo) for photo in self.photos))
+        return hash(tuple(tuple(photo) for photo in self.photos))

@@ -1795,7 +1795,7 @@ class TestBot:
 
     @flaky(3, 1)
     def test_set_chat_description(self, bot, channel_id):
-        assert bot.set_chat_description(channel_id, 'Time: ' + str(time.time()))
+        assert bot.set_chat_description(channel_id, f'Time: {str(time.time())}')
 
     # TODO: Add bot to group to test there too
     @flaky(3, 1)
@@ -2470,7 +2470,7 @@ class TestBot:
             camel_case_function = getattr(ExtBot, to_camel_case(function_name), False)
             if callable(function) and camel_case_function and camel_case_function is not function:
                 invalid_camel_case_functions.append(function_name)
-        assert invalid_camel_case_functions == []
+        assert not invalid_camel_case_functions
 
     def test_camel_case_bot(self):
         not_available_camelcase_functions = []
@@ -2484,4 +2484,4 @@ class TestBot:
             camel_case_function = getattr(Bot, to_camel_case(function_name), False)
             if not camel_case_function:
                 not_available_camelcase_functions.append(function_name)
-        assert not_available_camelcase_functions == []
+        assert not not_available_camelcase_functions

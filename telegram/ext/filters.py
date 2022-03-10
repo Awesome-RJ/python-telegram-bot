@@ -323,25 +323,17 @@ class MergedFilter(UpdateFilter):
         if self.and_filter:
             # And filter needs to short circuit if base is falsey
             if base_output:
-                comp_output = self.and_filter(update)
-                if comp_output:
+                if comp_output := self.and_filter(update):
                     if self.data_filter:
-                        merged = self._merge(base_output, comp_output)
-                        if merged:
+                        if merged := self._merge(base_output, comp_output):
                             return merged
                     return True
         elif self.or_filter:
             # Or filter needs to short circuit if base is truthey
             if base_output:
-                if self.data_filter:
-                    return base_output
-                return True
-
-            comp_output = self.or_filter(update)
-            if comp_output:
-                if self.data_filter:
-                    return comp_output
-                return True
+                return base_output if self.data_filter else True
+            if comp_output := self.or_filter(update):
+                return comp_output if self.data_filter else True
         return False
 
     @property
@@ -407,9 +399,7 @@ class _DiceEmoji(MessageFilter):
 
         def filter(self, message: Message) -> bool:
             if message.dice and message.dice.value in self.values:
-                if self.emoji:
-                    return message.dice.emoji == self.emoji
-                return True
+                return message.dice.emoji == self.emoji if self.emoji else True
             return False
 
     def __call__(  # type: ignore[override]
@@ -421,9 +411,7 @@ class _DiceEmoji(MessageFilter):
 
     def filter(self, message: Message) -> bool:
         if bool(message.dice):
-            if self.emoji:
-                return message.dice.emoji == self.emoji
-            return True
+            return message.dice.emoji == self.emoji if self.emoji else True
         return False
 
 
@@ -464,9 +452,7 @@ class Filters:
                 self.name = f'Filters.text({strings})'
 
             def filter(self, message: Message) -> bool:
-                if message.text:
-                    return message.text in self.strings
-                return False
+                return message.text in self.strings if message.text else False
 
         def __call__(  # type: ignore[override]
             self, update: Union[Update, List[str], Tuple[str]]
@@ -518,9 +504,7 @@ class Filters:
                 self.name = f'Filters.caption({strings})'
 
             def filter(self, message: Message) -> bool:
-                if message.caption:
-                    return message.caption in self.strings
-                return False
+                return message.caption in self.strings if message.caption else False
 
         def __call__(  # type: ignore[override]
             self, update: Union[Update, List[str], Tuple[str]]
@@ -636,8 +620,7 @@ class Filters:
         def filter(self, message: Message) -> Optional[Dict[str, List[Match]]]:
             """"""  # remove method from docs
             if message.text:
-                match = self.pattern.search(message.text)
-                if match:
+                if match := self.pattern.search(message.text):
                     return {'matches': [match]}
             return {}
 
@@ -672,8 +655,7 @@ class Filters:
         def filter(self, message: Message) -> Optional[Dict[str, List[Match]]]:
             """"""  # remove method from docs
             if message.caption:
-                match = self.pattern.search(message.caption)
-                if match:
+                if match := self.pattern.search(message.caption):
                     return {'matches': [match]}
             return {}
 
@@ -1564,8 +1546,7 @@ officedocument.wordprocessingml.document")``.
 
         def filter(self, message: Message) -> bool:
             """"""  # remove method from docs
-            chat_or_user = self.get_chat_or_user(message)
-            if chat_or_user:
+            if chat_or_user := self.get_chat_or_user(message):
                 if self.chat_ids:
                     return chat_or_user.id in self.chat_ids
                 if self.usernames:

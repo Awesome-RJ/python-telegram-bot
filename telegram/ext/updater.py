@@ -594,14 +594,12 @@ class Updater(Generic[CCT, UD, CD, BD]):
         self.logger.debug('Bootstrap done')
 
         def polling_action_cb():
-            updates = self.bot.get_updates(
+            if updates := self.bot.get_updates(
                 self.last_update_id,
                 timeout=timeout,
                 read_latency=read_latency,
                 allowed_updates=allowed_updates,
-            )
-
-            if updates:
+            ):
                 if not self.running:
                     self.logger.debug('Updates ignored and will be pulled again on restart')
                 else:

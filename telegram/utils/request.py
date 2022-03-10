@@ -220,13 +220,10 @@ class Request:
 
         if not data.get('ok'):  # pragma: no cover
             description = data.get('description')
-            parameters = data.get('parameters')
-            if parameters:
-                migrate_to_chat_id = parameters.get('migrate_to_chat_id')
-                if migrate_to_chat_id:
+            if parameters := data.get('parameters'):
+                if migrate_to_chat_id := parameters.get('migrate_to_chat_id'):
                     raise ChatMigrated(migrate_to_chat_id)
-                retry_after = parameters.get('retry_after')
-                if retry_after:
+                if retry_after := parameters.get('retry_after'):
                     raise RetryAfter(retry_after)
             if description:
                 return description
