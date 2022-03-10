@@ -222,8 +222,13 @@ class TestCommandHandler(BaseTest):
     def test_directed_commands(self, bot, command):
         """Test recognition of commands with a mention to the bot"""
         handler = self.make_default_handler()
-        assert is_match(handler, make_command_update(command + '@' + bot.username, bot=bot))
-        assert not is_match(handler, make_command_update(command + '@otherbot', bot=bot))
+        assert is_match(
+            handler, make_command_update(f'{command}@{bot.username}', bot=bot)
+        )
+
+        assert not is_match(
+            handler, make_command_update(f'{command}@otherbot', bot=bot)
+        )
 
     def test_with_filter(self, command):
         """Test that a CH with a (generic) filter responds iff its filters match"""
@@ -237,9 +242,9 @@ class TestCommandHandler(BaseTest):
         dp.add_handler(handler)
         at_command = f'{command}@{bot.username}'
         assert self.response(dp, make_command_update(command))
-        assert self.response(dp, make_command_update(command + ' one two'))
+        assert self.response(dp, make_command_update(f'{command} one two'))
         assert self.response(dp, make_command_update(at_command, bot=bot))
-        assert self.response(dp, make_command_update(at_command + ' one two', bot=bot))
+        assert self.response(dp, make_command_update(f'{at_command} one two', bot=bot))
 
     def test_newline(self, dp, command):
         """Assert that newlines don't interfere with a command handler matching a message"""
@@ -360,7 +365,7 @@ class TestPrefixHandler(BaseTest):
 
         assert self.response(dp, make_message_update(text))
         assert not is_match(handler, make_message_update(command))
-        assert not is_match(handler, make_message_update(prefix + 'notacommand'))
+        assert not is_match(handler, make_message_update(f'{prefix}notacommand'))
         assert not is_match(handler, make_command_update(f'not {text} at start'))
 
     def test_single_multi_prefixes_commands(self, prefixes, commands, prefix_message_update):
@@ -386,7 +391,7 @@ class TestPrefixHandler(BaseTest):
         dp.add_handler(handler)
         assert self.response(dp, make_message_update(prefix_message))
 
-        update_with_args = make_message_update(prefix_message.text + ' one two')
+        update_with_args = make_message_update(f'{prefix_message.text} one two')
         assert self.response(dp, update_with_args)
 
     @pytest.mark.parametrize('pass_keyword', BaseTest.PASS_KEYWORDS)
@@ -430,7 +435,7 @@ class TestPrefixHandler(BaseTest):
 
         assert self.response(dp, make_message_update(text))
         handler.command = 'foo'
-        text = prefix + 'foo'
+        text = f'{prefix}foo'
         assert self.response(dp, make_message_update(text))
 
     def test_context(self, cdp, prefix_message_update):

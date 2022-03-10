@@ -74,10 +74,12 @@ class InlineKeyboardMarkup(ReplyMarkup):
         keyboard = []
         for row in data['inline_keyboard']:
             tmp = []
-            for col in row:
-                btn = InlineKeyboardButton.de_json(col, bot)
-                if btn:
-                    tmp.append(btn)
+            tmp.extend(
+                btn
+                for col in row
+                if (btn := InlineKeyboardButton.de_json(col, bot))
+            )
+
             keyboard.append(tmp)
 
         return cls(keyboard)
@@ -135,4 +137,4 @@ class InlineKeyboardMarkup(ReplyMarkup):
         return cls(button_grid, **kwargs)
 
     def __hash__(self) -> int:
-        return hash(tuple(tuple(button for button in row) for row in self.inline_keyboard))
+        return hash(tuple(tuple(row) for row in self.inline_keyboard))

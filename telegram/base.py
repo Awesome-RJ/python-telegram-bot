@@ -90,10 +90,7 @@ class TelegramObject:
             A list of Telegram objects.
 
         """
-        if not data:
-            return []
-
-        return [cls.de_json(d, bot) for d in data]
+        return [cls.de_json(d, bot) for d in data] if data else []
 
     def to_json(self) -> str:
         """Gives a JSON representation of object.
@@ -122,11 +119,7 @@ class TelegramObject:
 
             value = getattr(self, key, None)
             if value is not None:
-                if hasattr(value, 'to_dict'):
-                    data[key] = value.to_dict()
-                else:
-                    data[key] = value
-
+                data[key] = value.to_dict() if hasattr(value, 'to_dict') else value
         if data.get('from_user'):
             data['from'] = data.pop('from_user', None)
         return data

@@ -495,7 +495,7 @@ class Message(TelegramObject):
         **_kwargs: Any,
     ):
         # Required
-        self.message_id = int(message_id)
+        self.message_id = message_id
         # Optionals
         self.from_user = from_user
         self.sender_chat = sender_chat
@@ -569,11 +569,7 @@ class Message(TelegramObject):
         a private chat or normal group, returns a t.me link of the message.
         """
         if self.chat.type not in [Chat.PRIVATE, Chat.GROUP]:
-            if self.chat.username:
-                to_link = self.chat.username
-            else:
-                # Get rid of leading -100 for supergroups
-                to_link = f"c/{str(self.chat.id)[4:]}"
+            to_link = self.chat.username or f"c/{str(self.chat.id)[4:]}"
             return f"https://t.me/{to_link}/{self.message_id}"
         return None
 
@@ -675,12 +671,14 @@ class Message(TelegramObject):
         if self._effective_attachment is not DEFAULT_NONE:
             return self._effective_attachment  # type: ignore
 
-        for i in Message.ATTACHMENT_TYPES:
-            if getattr(self, i, None):
-                self._effective_attachment = getattr(self, i)
-                break
-        else:
-            self._effective_attachment = None
+        self._effective_attachment = next(
+            (
+                getattr(self, i)
+                for i in Message.ATTACHMENT_TYPES
+                if getattr(self, i, None)
+            ),
+            None,
+        )
 
         return self._effective_attachment  # type: ignore
 
@@ -716,17 +714,13 @@ class Message(TelegramObject):
         if reply_to_message_id is not None:
             return reply_to_message_id
 
-        if quote is not None:
-            if quote:
-                return self.message_id
-
-        else:
-            if self.bot.defaults:
-                default_quote = self.bot.defaults.quote
-            else:
-                default_quote = None
+        if quote is None:
+            default_quote = self.bot.defaults.quote if self.bot.defaults else None
             if (default_quote is None and self.chat.type != Chat.PRIVATE) or default_quote:
                 return self.message_id
+
+        elif quote:
+            return self.message_id
 
         return None
 
@@ -2483,30 +2477,27 @@ class Message(TelegramObject):
                 elif entity.type == MessageEntity.URL and urled:
                     insert = f'<a href="{text}">{text}</a>'
                 elif entity.type == MessageEntity.BOLD:
-                    insert = '<b>' + text + '</b>'
+                    insert = f'<b>{text}</b>'
                 elif entity.type == MessageEntity.ITALIC:
-                    insert = '<i>' + text + '</i>'
+                    insert = f'<i>{text}</i>'
                 elif entity.type == MessageEntity.CODE:
-                    insert = '<code>' + text + '</code>'
+                    insert = f'<code>{text}</code>'
                 elif entity.type == MessageEntity.PRE:
                     if entity.language:
                         insert = f'<pre><code class="{entity.language}">{text}</code></pre>'
                     else:
-                        insert = '<pre>' + text + '</pre>'
+                        insert = f'<pre>{text}</pre>'
                 elif entity.type == MessageEntity.UNDERLINE:
-                    insert = '<u>' + text + '</u>'
+                    insert = f'<u>{text}</u>'
                 elif entity.type == MessageEntity.STRIKETHROUGH:
-                    insert = '<s>' + text + '</s>'
+                    insert = f'<s>{text}</s>'
                 else:
                     insert = text
 
                 if offset == 0:
-                    if sys.maxunicode == 0xFFFF:
-                        html_text += (
+                    html_text += (
                             escape(message_text[last_offset : entity.offset - offset]) + insert
-                        )
-                    else:
-                        html_text += (
+                        ) if sys.maxunicode == 0xFFFF else (
                             escape(
                                 message_text[  # type: ignore
                                     last_offset * 2 : (entity.offset - offset) * 2
@@ -2514,31 +2505,31 @@ class Message(TelegramObject):
                             )
                             + insert
                         )
+                elif sys.maxunicode == 0xFFFF:
+                    html_text += message_text[last_offset : entity.offset - offset] + insert
                 else:
-                    if sys.maxunicode == 0xFFFF:
-                        html_text += message_text[last_offset : entity.offset - offset] + insert
-                    else:
-                        html_text += (
-                            message_text[  # type: ignore
-                                last_offset * 2 : (entity.offset - offset) * 2
-                            ].decode('utf-16-le')
-                            + insert
-                        )
+                    html_text += (
+                        message_text[  # type: ignore
+                            last_offset * 2 : (entity.offset - offset) * 2
+                        ].decode('utf-16-le')
+                        + insert
+                    )
 
                 last_offset = entity.offset - offset + entity.length
 
         if offset == 0:
-            if sys.maxunicode == 0xFFFF:
-                html_text += escape(message_text[last_offset:])
-            else:
-                html_text += escape(
+            html_text += (
+                escape(message_text[last_offset:])
+                if sys.maxunicode == 0xFFFF
+                else escape(
                     message_text[last_offset * 2 :].decode('utf-16-le')  # type: ignore
                 )
+            )
+
+        elif sys.maxunicode == 0xFFFF:
+            html_text += message_text[last_offset:]
         else:
-            if sys.maxunicode == 0xFFFF:
-                html_text += message_text[last_offset:]
-            else:
-                html_text += message_text[last_offset * 2 :].decode('utf-16-le')  # type: ignore
+            html_text += message_text[last_offset * 2 :].decode('utf-16-le')  # type: ignore
 
         return html_text
 

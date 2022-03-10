@@ -66,9 +66,11 @@ class TestCallbackQuery:
 
     @staticmethod
     def shortcut_kwargs(callback_query: CallbackQuery):
-        if not callback_query.inline_message_id:
-            return {'message_id', 'chat_id'}
-        return {'inline_message_id'}
+        return (
+            {'inline_message_id'}
+            if callback_query.inline_message_id
+            else {'message_id', 'chat_id'}
+        )
 
     @staticmethod
     def check_passed_ids(callback_query: CallbackQuery, kwargs):
@@ -264,8 +266,7 @@ class TestCallbackQuery:
 
     def test_stop_message_live_location(self, monkeypatch, callback_query):
         def make_assertion(*_, **kwargs):
-            ids = self.check_passed_ids(callback_query, kwargs)
-            return ids
+            return self.check_passed_ids(callback_query, kwargs)
 
         assert check_shortcut_signature(
             CallbackQuery.stop_message_live_location,

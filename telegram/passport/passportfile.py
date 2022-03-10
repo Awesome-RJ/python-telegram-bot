@@ -130,13 +130,10 @@ class PassportFile(TelegramObject):
             List[:class:`telegram.PassportFile`]:
 
         """
-        if not data:
-            return []
-
         return [
             cls.de_json_decrypted(passport_file, bot, credentials[i])
             for i, passport_file in enumerate(data)
-        ]
+        ] if data else []
 
     def get_file(
         self, timeout: ODVInput[float] = DEFAULT_NONE, api_kwargs: JSONDict = None
